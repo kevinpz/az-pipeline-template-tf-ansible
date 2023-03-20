@@ -32,6 +32,11 @@ stages:
   jobs:
   - job: Plan
     steps:
+      # Checkout the repositories
+      - checkout: self
+        path: s/az-server
+      - checkout: az-pipeline-template-tf-ansible
+      
       # Init Terraform backend and download providers
       - task: TerraformCLI@0
         displayName: Terraform init
