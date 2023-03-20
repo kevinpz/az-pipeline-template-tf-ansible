@@ -1,0 +1,57 @@
+# Variables
+variables:
+# Name of the service connection
+- name: sc_name
+  value: 'sc-mg-coffeetimedev'
+# ID of the subscription for the tfstate
+- name: backend_subscription_id
+  value: 'b34b291e-89b2-4d63-9f9c-1ac3e8f43b4f'
+# Storage account to store the tfstate
+- name: stg_name
+  value: 'stterraformkprintz'
+# RG name for the storage account to store the tfstate
+- name: stg_rg_name
+  value: 'rg-mgmt'
+# Name of the container to store the tfstate
+- name: stg_container_name
+  value: 'terraform'
+
+# Parameters
+parameters:
+# ID of the subscription for the deployment
+- name: depl_subscription_id
+  type: string 
+
+# Stages
+stages:
+# Deploy the server
+- stage: Plan
+  # Use the a specific runner
+  pool: azure-vm
+
+  jobs:
+  - job: Plan
+    steps:
+      # Init Terraform backend and download providers
+      - task: TerraformCLI@0
+        displayName: Terraform init
+        inputs:
+          workingDirectory: terraform
+          command: init
+          # Configure the backend to store the .tfstate file
+          backendType: azurerm
+          backendServiceArm: '${{ variables.sc_name }}'
+          backendAzureRmSubscriptionId: '${{ variables.backend_subscription_id }}'
+          backendAzureRmResourceGroupName: '${{ variables.stg_rg_name }}'
+          backendAzureRmStorageAccountName: '${{ variables.stg_name }}'
+          backendAzureRmContainerName: '${{ variables.stg_container_name }}'
+          backendAzureRmKey: '$(System.TeamProject)/$(Build.Repository.Name).tfstate'
+
+      # Deploy Terraform ressources
+      - task: TerraformCLI@0
+        displayName: Terraform plan
+        inputs:
+          workingDirectory: terraform
+          command: plan
+          environmentServiceName: '${{ variables.sc_name }}'
+          providerAzureRmSubscriptionId: '${{ parameters.depl_subscription_id }}'
