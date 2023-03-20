@@ -24,7 +24,7 @@ parameters:
 
 # Stages
 stages:
-# Deploy the server
+# Terraform plan
 - stage: Plan
   # Use the a specific runner
   pool: azure-vm
@@ -60,6 +60,7 @@ stages:
           environmentServiceName: '${{ variables.sc_name }}'
           providerAzureRmSubscriptionId: '${{ parameters.depl_subscription_id }}'
 
+# Terraform apply
 - stage: Deploy
   # Use the a specific runner
   pool: azure-vm
@@ -86,7 +87,7 @@ stages:
           backendAzureRmContainerName: '${{ variables.stg_container_name }}'
           backendAzureRmKey: '$(System.TeamProject)/$(Build.Repository.Name).tfstate'
 
-      # Plan Terraform ressources
+      # Deploy Terraform ressources
       - task: TerraformCLI@0
         displayName: Terraform apply
         inputs:
@@ -94,3 +95,52 @@ stages:
           command: apply
           environmentServiceName: '${{ variables.sc_name }}'
           providerAzureRmSubscriptionId: '${{ parameters.depl_subscription_id }}'
+
+      # Get Terraform output
+      - task: TerraformCLI@0
+        displayName: Terraform output
+        name: get_output 
+        inputs:
+          workingDirectory: ./az-server/terraform
+          command: output
+          environmentServiceName: '${{ variables.sc_name }}'
+          providerAzureRmSubscriptionId: '${{ variables.depl_subscription_id }}'
+
+      # Check if we need to configure the VM
+      - task: Bash@3
+        displayName: Check VM config needed
+        name: vm_config 
+        inputs:
+          targetType: 'inline'
+          script: echo "##vso[task.setvariable variable=vm_config;isOutput=true;issecret=false]$(test -d "./az-server/ansibles")" 
+
+# Ansible run
+- stage: Config
+  # Use the a specific runner
+  pool: azure-vm
+  # Only run if there is an ansible folder
+  condition: and(succeeded(), eq(dependencies.Deploy.outputs['Deploy.vm_config.vm_config'], 'true'))
+  jobs:
+  - job: Config
+    steps:
+      # Checkout the repositories
+      - checkout: self
+        path: s/az-server
+      - checkout: az-pipeline-template-tf-ansible
+
+      # Use ansible to configure the server
+      - task: Ansible@0
+        displayName: Configure the server
+        inputs:
+          ansibleInterface: 'agentMachine'
+          workingDirectory: ./az-server/ansible
+          playbookPathOnAgentMachine: './playbook.yml'
+          failOnStdErr: false
+          inventoriesAgentMachine: inlineContent
+          inventoryInlineContentAgentMachine: |
+            [packer]
+            ${TF_OUT_VM_IP_ADDR}
+          args: --extra-vars "ansible_user=adminuser ansible_password=${vm_password}"
+        env:
+          vm_password: $(create_password.vm_password)
+          ANSIBLE_HOST_KEY_CHECKING: False
