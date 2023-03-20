@@ -102,7 +102,7 @@ stages:
   pool: azure-vm
   jobs:
   # Check if we need to run Ansible
-  - job: CheckConfig
+  - job: CheckConfigNeeded
     steps:
       # Checkout the repositories
       - checkout: self
@@ -120,7 +120,8 @@ stages:
   # Run ansible
   - job: Config
     # Only run if there is an ansible folder
-    condition: and(succeeded(), eq(dependencies.CheckConfig.outputs['vm_config.config_needed'], 'true'))
+    dependsOn: CheckConfigNeeded
+    condition: eq(dependencies.CheckConfigNeeded.outputs['vm_config.config_needed'], 'true')
     steps:
       # Checkout the repositories
       - checkout: self
