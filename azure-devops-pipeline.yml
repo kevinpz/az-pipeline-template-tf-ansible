@@ -136,8 +136,7 @@ stages:
         displayName: Configure the server
         inputs:
           ansibleInterface: 'agentMachine'
-          workingDirectory: ./az-server/ansible
-          playbookPathOnAgentMachine: './playbook.yml'
+          playbookPathOnAgentMachine: './az-server/ansible/playbook.yml'
           failOnStdErr: false
           inventoriesAgentMachine: inlineContent
           inventoryInlineContentAgentMachine: |
