@@ -96,16 +96,6 @@ stages:
           environmentServiceName: '${{ variables.sc_name }}'
           providerAzureRmSubscriptionId: '${{ parameters.depl_subscription_id }}'
 
-      # Get Terraform output
-      - task: TerraformCLI@0
-        displayName: Terraform output
-        name: get_output 
-        inputs:
-          workingDirectory: ./az-server/terraform
-          command: output
-          environmentServiceName: '${{ variables.sc_name }}'
-          providerAzureRmSubscriptionId: '${{ variables.depl_subscription_id }}'
-
       # Check if we need to configure the VM
       - task: Bash@3
         displayName: Check VM config needed
@@ -122,14 +112,36 @@ stages:
   condition: and(succeeded(), eq(dependencies.Deploy.outputs['Deploy.vm_config.vm_config'], 'true'))
   jobs:
   - job: Config
-    variables:
-        # Get the output from Terraform
-        vm_ip_addr: $[ stageDependencies.Deploy.Deploy.outputs['get_output.TF_OUT_VM_IP_ADDR'] ]
     steps:
       # Checkout the repositories
       - checkout: self
         path: s/az-server
       - checkout: az-pipeline-template-tf-ansible
+
+      # Init Terraform backend and download providers
+      - task: TerraformCLI@0
+        displayName: Terraform init
+        inputs:
+          workingDirectory: ./az-server/terraform
+          command: init
+          # Configure the backend to store the .tfstate file
+          backendType: azurerm
+          backendServiceArm: '${{ variables.sc_name }}'
+          backendAzureRmSubscriptionId: '${{ variables.backend_subscription_id }}'
+          backendAzureRmResourceGroupName: '${{ variables.stg_rg_name }}'
+          backendAzureRmStorageAccountName: '${{ variables.stg_name }}'
+          backendAzureRmContainerName: '${{ variables.stg_container_name }}'
+          backendAzureRmKey: '$(System.TeamProject)/$(Build.Repository.Name).tfstate'
+
+      # Get Terraform output
+      - task: TerraformCLI@0
+        displayName: Terraform output
+        name: get_output 
+        inputs:
+          workingDirectory: ./az-server/terraform
+          command: output
+          environmentServiceName: '${{ variables.sc_name }}'
+          providerAzureRmSubscriptionId: '${{ variables.depl_subscription_id }}'
 
       # Use ansible to configure the server
       - task: Ansible@0
@@ -141,8 +153,9 @@ stages:
           inventoriesAgentMachine: inlineContent
           inventoryInlineContentAgentMachine: |
             [packer]
-            $(vm_ip_addr)
+            ${vm_ip_addr}
           args: --extra-vars "ansible_user=adminuser ansible_password=${vm_password}"
         env:
-          vm_password: $(create_password.vm_password)
+          vm_ip_addr: $(TF_OUT_VM_IP_ADDR)
+          vm_password: $(TF_OUT_VM_SECRET)
           ANSIBLE_HOST_KEY_CHECKING: False
