@@ -22,13 +22,13 @@ parameters:
 - name: depl_subscription_id
   type: string 
 
+# Use the a specific runner
+pool: azure-vm
+
 # Stages
 stages:
 # Deploy the server
 - stage: Plan
-  # Use the a specific runner
-  pool: azure-vm
-
   jobs:
   - job: Plan
     steps:
@@ -52,11 +52,44 @@ stages:
           backendAzureRmContainerName: '${{ variables.stg_container_name }}'
           backendAzureRmKey: '$(System.TeamProject)/$(Build.Repository.Name).tfstate'
 
-      # Deploy Terraform ressources
+      # Plan Terraform ressources
       - task: TerraformCLI@0
         displayName: Terraform plan
         inputs:
           workingDirectory: ./az-server/terraform
           command: plan
+          environmentServiceName: '${{ variables.sc_name }}'
+          providerAzureRmSubscriptionId: '${{ parameters.depl_subscription_id }}'
+
+- stage: Deploy
+  jobs:
+  - job: Deploy
+    steps:
+      # Checkout the repositories
+      - checkout: self
+        path: s/az-server
+      - checkout: az-pipeline-template-tf-ansible
+
+      # Init Terraform backend and download providers
+      - task: TerraformCLI@0
+        displayName: Terraform init
+        inputs:
+          workingDirectory: ./az-server/terraform
+          command: init
+          # Configure the backend to store the .tfstate file
+          backendType: azurerm
+          backendServiceArm: '${{ variables.sc_name }}'
+          backendAzureRmSubscriptionId: '${{ variables.backend_subscription_id }}'
+          backendAzureRmResourceGroupName: '${{ variables.stg_rg_name }}'
+          backendAzureRmStorageAccountName: '${{ variables.stg_name }}'
+          backendAzureRmContainerName: '${{ variables.stg_container_name }}'
+          backendAzureRmKey: '$(System.TeamProject)/$(Build.Repository.Name).tfstate'
+
+      # Plan Terraform ressources
+      - task: TerraformCLI@0
+        displayName: Terraform apply
+        inputs:
+          workingDirectory: ./az-server/terraform
+          command: apply
           environmentServiceName: '${{ variables.sc_name }}'
           providerAzureRmSubscriptionId: '${{ parameters.depl_subscription_id }}'
