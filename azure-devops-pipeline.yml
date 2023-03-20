@@ -22,13 +22,12 @@ parameters:
 - name: depl_subscription_id
   type: string 
 
-# Use the a specific runner
-pool: azure-vm
-
 # Stages
 stages:
 # Deploy the server
 - stage: Plan
+  # Use the a specific runner
+  pool: azure-vm
   jobs:
   - job: Plan
     steps:
@@ -62,6 +61,8 @@ stages:
           providerAzureRmSubscriptionId: '${{ parameters.depl_subscription_id }}'
 
 - stage: Deploy
+  # Use the a specific runner
+  pool: azure-vm
   jobs:
   - job: Deploy
     steps:
