@@ -37,6 +37,15 @@ stages:
         path: s/az-server
       - checkout: az-pipeline-template-tf-ansible
 
+      # Debug
+      - task: Bash@3
+        displayName: Generate VM password
+        name: debug 
+        inputs:
+          targetType: 'inline'
+          script: pwd
+      
+
       # Init Terraform backend and download providers
       - task: TerraformCLI@0
         displayName: Terraform init
