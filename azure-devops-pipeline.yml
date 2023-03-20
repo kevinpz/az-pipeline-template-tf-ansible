@@ -112,7 +112,7 @@ stages:
         name: vm_config 
         inputs:
           targetType: 'inline'
-          script: echo "##vso[task.setvariable variable=vm_config;isOutput=true;issecret=false]$(test -d "./az-server/ansible")" 
+          script: echo "##vso[task.setvariable variable=vm_config;isOutput=true;issecret=false]$(test -d "./az-server/ansible" && echo true || echo false)" 
 
 # Ansible run
 - stage: Config
