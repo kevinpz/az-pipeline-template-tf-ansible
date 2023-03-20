@@ -1,16 +1,16 @@
 # Create a public IP
 resource "azurerm_public_ip" "pip" {
   name                = "pip-terraform-ansible"
-  resource_group_name = azurerm_resource_group.rg.name
-  location            = azurerm_resource_group.rg.location
+  resource_group_name = var.rg_name
+  location            = var.location
   allocation_method   = "Static"
 }
 
 # Create a NIC
 resource "azurerm_network_interface" "nic" {
   name                = "nic-terraform-ansible"
-  location            = azurerm_resource_group.rg.location
-  resource_group_name = azurerm_resource_group.rg.name
+  location            = var.location
+  resource_group_name = var.rg_name
 
   ip_configuration {
     name                          = "internal"
@@ -35,8 +35,8 @@ data "azurerm_key_vault_secret" "secret" {
 # Create a VM
 resource "azurerm_linux_virtual_machine" "packer" {
   name                = var.vm_name
-  resource_group_name = azurerm_resource_group.rg.name
-  location            = azurerm_resource_group.rg.location
+  resource_group_name = var.rg_name
+  location            = var.location
 
   size                = "Standard_B1s"
   admin_username      = "adminuser"
