@@ -1,0 +1,17 @@
+---
+# playbook.yml
+- name: 'Install default package'
+  hosts: all
+  become: true
+  tasks:
+    - name: Update packages
+      ansible.builtin.apt:
+        update_cache: true
+        upgrade: yes
+    - name: Install default packages
+      ansible.builtin.apt:
+        package:
+          - unzip
+          - wget
+        state: latest
+        update_cache: true
