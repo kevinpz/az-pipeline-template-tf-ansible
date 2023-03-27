@@ -68,7 +68,7 @@ resource "null_resource" "ansible" {
 
   # Force ansible to run each time
   triggers = {
-    key = "${uuid()}"
+    key = "${filemd5("../../az-server/${var.ansible_playbook}")}"
   }
 
   # Wait for the SSH to become available
