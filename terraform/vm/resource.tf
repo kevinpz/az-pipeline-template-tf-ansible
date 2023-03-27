@@ -58,8 +58,19 @@ resource "azurerm_linux_virtual_machine" "packer" {
     sku       = "20_04-lts-gen2"
     version   = "latest"
   }
+}
+
+resource "null_resource" "ansible" {
+
+  triggers {
+    key = "${uuid()}"
+  }
 
   provisioner "local-exec" {
-    command = "ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook -u adminuser -i '${azurerm_public_ip.pip.ip_address},' --extra-vars 'ansible_password=${data.azurerm_key_vault_secret.secret.value}' '../../az-server/${var.ansible_playbook}'"
+    command = "ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook -u adminuser -i '${azurerm_public_ip.pip.ip_address},' --extra-vars 'ansible_password=${data.azurerm_key_vault_secret.secret.value}' '../../../az-server/${var.ansible_playbook}'"
   }
+
+  depends_on = [
+    azurerm_linux_virtual_machine.packer
+  ]
 }
