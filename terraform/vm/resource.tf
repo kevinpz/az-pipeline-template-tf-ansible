@@ -1,6 +1,6 @@
 # Create a public IP
 resource "azurerm_public_ip" "pip" {
-  name                = "pip-terraform-ansible"
+  name                = "pip-${var.vm_name}"
   resource_group_name = var.rg_name
   location            = var.location
   allocation_method   = "Static"
@@ -8,7 +8,7 @@ resource "azurerm_public_ip" "pip" {
 
 # Create a NIC
 resource "azurerm_network_interface" "nic" {
-  name                = "nic-terraform-ansible"
+  name                = "nic-${var.vm_name}"
   location            = var.location
   resource_group_name = var.rg_name
 
@@ -70,7 +70,7 @@ resource "null_resource" "ansible" {
   }
 
   provisioner "local-exec" {
-    command = "ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook -u adminuser -i '${azurerm_public_ip.pip.ip_address},' --extra-vars 'ansible_password=$vm_password' '../../az-server/${var.ansible_playbook}'"
+    command = "ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook -u adminuser -i '${azurerm_public_ip.pip.ip_address},' --extra-vars \"ansible_password=$vm_password\" '../../az-server/${var.ansible_playbook}'"
     environment = {
       vm_password = nonsensitive(data.azurerm_key_vault_secret.secret.value)
     }
