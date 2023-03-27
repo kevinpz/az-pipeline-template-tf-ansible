@@ -70,7 +70,7 @@ resource "null_resource" "ansible" {
   }
 
   provisioner "local-exec" {
-    command = "ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook -u adminuser -i '${azurerm_public_ip.pip.ip_address},' --extra-vars 'ansible_password=${var.bash_env.vm_password}' '../../az-server/${var.ansible_playbook}'"
+    command = "ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook -u adminuser -i '${azurerm_public_ip.pip.ip_address},' --extra-vars 'ansible_password=$vm_password' '../../az-server/${var.ansible_playbook}'"
     environment = {
       vm_password = nonsensitive(data.azurerm_key_vault_secret.secret.value)
     }
