@@ -62,7 +62,7 @@ resource "azurerm_linux_virtual_machine" "packer" {
 
 resource "null_resource" "ansible" {
 
-  triggers {
+  triggers = {
     key = "${uuid()}"
   }
 
