@@ -79,7 +79,7 @@ resource "null_resource" "ansible" {
       password = data.azurerm_key_vault_secret.secret.value
     }
 
-    inline = ["echo 'connected!'"]
+    inline = ["echo 'SSH is running!'"]
   }
 
   # then call ansible with the playbook
