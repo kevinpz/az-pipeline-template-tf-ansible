@@ -32,3 +32,8 @@ variable "kv_name" {
 variable "kv_secret_name" {
   type = string
 }
+
+# Main ansible playbook
+variable "ansible_playbook" {
+  type = string
+}
