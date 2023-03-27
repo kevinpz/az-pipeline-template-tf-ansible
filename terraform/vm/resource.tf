@@ -60,7 +60,10 @@ resource "azurerm_linux_virtual_machine" "packer" {
   }
 }
 
+# call ansible
 resource "null_resource" "ansible" {
+
+  count = var.ansible_playbook == "" ? 0 : 1
 
   triggers = {
     key = "${uuid()}"

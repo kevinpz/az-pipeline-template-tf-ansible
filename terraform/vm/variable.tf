@@ -35,5 +35,6 @@ variable "kv_secret_name" {
 
 # Main ansible playbook
 variable "ansible_playbook" {
-  type = string
+  type    = string
+  default = ""
 }
