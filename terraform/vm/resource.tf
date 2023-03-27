@@ -66,7 +66,7 @@ resource "null_resource" "ansible" {
   # Only if we specify an ansible playbook
   count = var.ansible_playbook == "" ? 0 : 1
 
-  # Force ansible to run each time
+  # Force ansible to run each time the playbook file is modified
   triggers = {
     key = "${filemd5("../../az-server/${var.ansible_playbook}")}"
   }
