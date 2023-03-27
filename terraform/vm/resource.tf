@@ -63,12 +63,26 @@ resource "azurerm_linux_virtual_machine" "packer" {
 # call ansible
 resource "null_resource" "ansible" {
 
+  # only if we specify an ansible playbook
   count = var.ansible_playbook == "" ? 0 : 1
 
+  # force ansible to run each time
   triggers = {
     key = "${uuid()}"
   }
 
+  # wait for the SSH to become available
+  provisioner "remote-exec" {
+    connection {
+      host = azurerm_public_ip.pip.ip_address
+      user = "adminuser"
+      password = data.azurerm_key_vault_secret.secret.value
+    }
+
+    inline = ["echo 'connected!'"]
+  }
+
+  # call ansible with the playbook
   provisioner "local-exec" {
     command = "ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook -u adminuser -i '${azurerm_public_ip.pip.ip_address},' --extra-vars \"ansible_password=$vm_password\" '../../az-server/${var.ansible_playbook}'"
     environment = {
@@ -76,6 +90,7 @@ resource "null_resource" "ansible" {
     }
   }
 
+  # depends on the VM creation
   depends_on = [
     azurerm_linux_virtual_machine.packer
   ]
