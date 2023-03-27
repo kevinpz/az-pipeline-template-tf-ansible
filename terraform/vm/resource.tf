@@ -82,7 +82,7 @@ resource "null_resource" "ansible" {
     inline = ["echo 'connected!'"]
   }
 
-  # call ansible with the playbook
+  # then call ansible with the playbook
   provisioner "local-exec" {
     command = "ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook -u adminuser -i '${azurerm_public_ip.pip.ip_address},' --extra-vars \"ansible_password=$vm_password\" '../../az-server/${var.ansible_playbook}'"
     environment = {
