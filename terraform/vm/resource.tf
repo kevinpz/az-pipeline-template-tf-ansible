@@ -60,6 +60,6 @@ resource "azurerm_linux_virtual_machine" "packer" {
   }
 
   provisioner "local-exec" {
-    command = "ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook -u adminuser -i '${azurerm_public_ip.pip.ip_address},' --extra-vars 'ansible_password=${data.azurerm_key_vault_secret.secret.value}' './az-server/${var.ansible_playbook}'"
+    command = "ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook -u adminuser -i '${azurerm_public_ip.pip.ip_address},' --extra-vars 'ansible_password=${data.azurerm_key_vault_secret.secret.value}' '../../az-server/${var.ansible_playbook}'"
   }
 }
